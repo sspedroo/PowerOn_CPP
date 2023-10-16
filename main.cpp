@@ -2,8 +2,7 @@
 #include <conio.h>
 #include <string>
 #include <Windows.h>
-#include <cstring>
-#include <vector>
+
 
 using namespace std;
 
@@ -13,7 +12,7 @@ struct Aluno {
     string dataDeNascimento;
     float peso;
     float altura;
-    int status = 0;
+    int status;
 };
 
 struct IndiceAluno {
@@ -26,7 +25,7 @@ struct Professores {
     string nomeDoProfessor;
     string enderecoDoProfessor;
     string telefoneDoProfessor;
-    int status = 0;
+    int status;
 };
 
 struct IndiceProfessor {
@@ -41,7 +40,7 @@ struct Modalidades {
     float valorDaAula;
     int limiteDeAlunos;
     int totalDeAlunos;
-    int status = 0;
+    int status;
 };
 
 struct IndiceModalidade {
@@ -54,7 +53,7 @@ struct Matricula {
     int cpfDoAluno;
     int matriculaCodigoDaModalidade;
     int quantidadeDeAulas;
-    int status = 0;
+    int status;
 };
 
 struct IndiceMatricula {
@@ -176,7 +175,7 @@ void inserirNovoAluno(struct Aluno aluno[], struct IndiceAluno indiceAluno[], in
 
         bool dataDeNascimentoNaoVazia = false;
         while (!dataDeNascimentoNaoVazia) {
-            cout << "\nData de nascimento do Aluno(a): ";
+            cout << "Data de nascimento do Aluno(a): ";
             getline(cin, aluno[i].dataDeNascimento);
             if (aluno[i].dataDeNascimento != "") {
                 dataDeNascimentoNaoVazia = true;
@@ -247,7 +246,7 @@ void inserirNovoProfessor(struct Professores professores[], struct IndiceProfess
 
         bool nomeProfessorNaoVazio = false;
         while (!nomeProfessorNaoVazio) {
-            cout << "Nome do Professor(a): ";
+            cout << "\nNome do Professor(a): ";
             cin.ignore();
             getline(cin, professores[i].nomeDoProfessor);
             if (professores[i].nomeDoProfessor != "") {
@@ -529,50 +528,123 @@ void deletarModalidade(struct IndiceModalidade indiceModalidade[], struct Modali
     }
 }
 
-void deletarMatricula(){
-
+void deletarMatricula(struct IndiceMatricula indiceMatricula[], struct Matricula matriculas[], int &contador, int codigoDaMatricula, struct IndiceModalidade indiceModalidade[], struct Modalidades modalidades[], int &contadorModalidade){
+    int inicio = 0, fim = contador - 1;
+    int meio = (inicio + fim) / 2;
+    for(; fim >= inicio && codigoDaMatricula != indiceMatricula[meio].codigoMatricula; meio = (inicio + fim) / 2){
+        if(codigoDaMatricula > indiceMatricula[meio].codigoMatricula) {
+            inicio = meio + 1;
+        } else {
+            fim = meio - 1;
+        }
+    }
+    inicio = indiceMatricula[meio].enderecoMatricula;
+    if((codigoDaMatricula == indiceMatricula[meio].codigoMatricula) && matriculas[inicio].status == 0){
+        matriculas[inicio].status = 1;
+        cout <<"Matricula "<< matriculas[inicio].codigoDaMatricula << " excluida"<<endl;
+        int modalidadeProcurada = matriculas[inicio].matriculaCodigoDaModalidade;
+        int resultadoBuscaModalidade = buscarModalidade(indiceModalidade, contadorModalidade, modalidadeProcurada);
+        modalidades[resultadoBuscaModalidade].totalDeAlunos = modalidades[resultadoBuscaModalidade].totalDeAlunos - 1;
+    } else {
+        cout <<"Matricula não encontrada. "<< endl;
+    }
 }
 
 void leituraExaustivaAluno(struct IndiceAluno indiceAluno[], struct Aluno aluno[], int contador){
+    cout <<"\n\n-------------------------------------------";
     for(int k = 0; k < contador; k++){
         int i = indiceAluno[k].enderecoDoAluno;
         if (aluno[i].status == 0){
-            cout << "\nNome do aluno(a): " <<aluno[i].nomeDoAluno;
+            cout << "\n\nNome do aluno(a): " <<aluno[i].nomeDoAluno;
             cout << "\nData de nascimento do aluno(a): " <<aluno[i].dataDeNascimento;
             cout << "\nPeso do aluno(a): " <<aluno[i].peso;
             cout << "\nAltura do aluno(a): " <<aluno[i].altura;
         }
     }
+    cout <<"\n\n-------------------------------------------";
+    cout << "\nDigite qualquer tecla para sair.";
 }
 
 void leituraExaustivaProfessor(struct IndiceProfessor indiceProfessor[], struct Professores professores[], int contador){
+    cout <<"\n\n----------------------------------------------------";
     for(int k = 0; k < contador; k++){
         int i = indiceProfessor[k].enderecoProfessor;
         if(professores[i].status == 0){
-            cout <<"\nNome do professor(a): " <<professores[i].nomeDoProfessor;
+            cout <<"\n\nNome do professor(a): " <<professores[i].nomeDoProfessor;
             cout <<"\nEndereço do professor(a): "<<professores[i].enderecoDoProfessor;
             cout <<"\nTelefone do professor(a): "<<professores[i].telefoneDoProfessor;
         }
     }
+    cout <<"\n\n---------------------------------------------------";
+    cout << "\nDigite qualquer tecla para sair.";
 }
 
-void leituraExaustivaModalidade(struct IndiceModalidade indiceModalidade[], struct Modalidades modalidades[], int contador){
+void leituraExaustivaModalidade(struct IndiceModalidade indiceModalidade[], struct Modalidades modalidades[], int contador, struct IndiceProfessor indiceProfessor[], struct Professores professores[], int contadorProfessor){
+    cout <<"\n\n-------------------------------------------";
     for(int k = 0; k < contador; k++){
         int i = indiceModalidade[k].enderecoModalidade;
         if(modalidades[i].status == 0){
-            cout << "\nDescrição da modalidade: "
+            cout << "\n\nDescrição da modalidade: " << modalidades[i].descricaoDaModalidade;
+            cout << "\nValor: " << modalidades[i].valorDaAula;
+            cout << "\nAlunos matriculados: " << modalidades[i].totalDeAlunos;
+            cout << "\nLimite de alunos: " << modalidades[i].limiteDeAlunos;
+            cout << "\nCodigo do Professor(a): " << modalidades[i].modalidadeCodigoDoProfessor;
+            int professorProcurado = modalidades[i].modalidadeCodigoDoProfessor;
+            int resultadoBuscaProfessor = buscarProfessor(indiceProfessor, contadorProfessor, professorProcurado);
+            cout << "\nNome do Professor(a): " << professores[resultadoBuscaProfessor].nomeDoProfessor;
         }
     }
+    cout <<"\n\n-------------------------------------------";
+    cout << "\nDigite qualquer tecla para sair.";
 }
 
+void leituraExaustivaMatricula(struct IndiceMatricula indiceMatricula[], struct Matricula matriculas[], int contadorMatricula, struct IndiceModalidade indiceModalidade[], struct Modalidades modalidades[], int contadorModalidade, struct IndiceAluno indiceAluno[], struct Aluno aluno[], int &contadorAluno){
+    cout <<"\n\n-------------------------------------------";
+    for(int k = 0; k < contadorMatricula; k++){
+        int i = indiceMatricula[k].enderecoMatricula;
+        if(matriculas[i].status == 0){
+            int cpfProcurado = matriculas[i].cpfDoAluno;
+            int resultadobuscarAluno = buscarAluno(indiceAluno, contadorAluno, cpfProcurado);
+            cout <<"\n\nCPF do Aluno: " << aluno[resultadobuscarAluno].cpf;
+            cout <<"\nNome do aluno: " << aluno[resultadobuscarAluno].nomeDoAluno;
+            cout <<"\nCodigo da modalidade: " << matriculas[i].matriculaCodigoDaModalidade;
+            cout <<"\nQuantidade de aulas: " << matriculas[i].quantidadeDeAulas;
+        }
+    }
+    cout <<"\n\n-------------------------------------------";
+    cout << "\nDigite qualquer tecla para sair.";
+}
+
+void calcularLucro(struct IndiceModalidade indiceModalidade[], struct Modalidades modalidades[], struct IndiceMatricula indiceMatricula[], struct Matricula matricula[], struct IndiceProfessor indiceProfessor[], struct Professores professores[], int &contadorModalidade, int &contadorMatricula, int &contadorProfessor){
+    int codigoDaModalidade;
+    cout << "Digite o código da modalidade: ";
+    cin >> codigoDaModalidade;
+
+     int resultadoBuscaModalidade = buscarModalidade(indiceModalidade, contadorModalidade, codigoDaModalidade);
+     float valorDaAula = modalidades[resultadoBuscaModalidade].valorDaAula;
+     int codigoDoProfessor = modalidades[resultadoBuscaModalidade].modalidadeCodigoDoProfessor;
+     int resultadobuscaProfessor = buscarProfessor(indiceProfessor, contadorProfessor, codigoDoProfessor);
+     cout << "\nDescrição: " << modalidades[resultadoBuscaModalidade].descricaoDaModalidade;
+     cout << "\nProfessor(a): " << professores[resultadobuscaProfessor].nomeDoProfessor;
+
+     int quantidadeDeAula = 0;
+     for(int i = 0; i < contadorMatricula; i++){
+         if(codigoDaModalidade == matricula[i].matriculaCodigoDaModalidade){
+             quantidadeDeAula += matricula[i].quantidadeDeAulas;
+         }
+     }
+     cout <<"\nQuantidade de aula: " << quantidadeDeAula;
+     float lucro = quantidadeDeAula * valorDaAula;
+     cout << "\nLucro: " << lucro;
+}
 
 int main() {
     SetConsoleOutputCP(CP_UTF8);
     Aluno aluno[8] = {
-            {.cpf = 4444, .nomeDoAluno = "Pedro", .dataDeNascimento = "16/10/1998", .peso = 80, .altura = 1.80},
-            {.cpf = 6666, .nomeDoAluno = "Raquel", .dataDeNascimento = "11/05/2004", .peso = 60, .altura = 1.60},
-            {.cpf = 2222, .nomeDoAluno = "Isabela", .dataDeNascimento = "16/02/2004", .peso = 67, .altura = 1.63},
-            {.cpf = 8888, .nomeDoAluno = "Gabriel", .dataDeNascimento = "21/06/1998", .peso = 92, .altura = 1.80}
+            {.cpf = 4444, .nomeDoAluno = "Pedro", .dataDeNascimento = "16/10/1998", .peso = 80, .altura = 1.80, .status = 0},
+            {.cpf = 6666, .nomeDoAluno = "Raquel", .dataDeNascimento = "11/05/2004", .peso = 60, .altura = 1.60, .status = 0},
+            {.cpf = 2222, .nomeDoAluno = "Isabela", .dataDeNascimento = "16/02/2004", .peso = 67, .altura = 1.63, .status = 0},
+            {.cpf = 8888, .nomeDoAluno = "Gabriel", .dataDeNascimento = "21/06/1998", .peso = 92, .altura = 1.80, .status = 0}
     };
 
     IndiceAluno indiceAluno[8] = {
@@ -583,10 +655,10 @@ int main() {
     };
 
     Professores professores[8] = {
-            {.codigoDoProfessor = 10, .nomeDoProfessor = "Wilson", .enderecoDoProfessor = "Rui Barbosa, 233", .telefoneDoProfessor = "18 99977 - 9999"},
-            {.codigoDoProfessor = 30, .nomeDoProfessor = "Luciana", .enderecoDoProfessor = "Vicente de Carvalho, 700", .telefoneDoProfessor = "18 99666 - 6666"},
-            {.codigoDoProfessor = 20, .nomeDoProfessor = "Hugo", .enderecoDoProfessor = "André Perine, 33", .telefoneDoProfessor = "18 98181 - 8181"},
-            {.codigoDoProfessor = 40, .nomeDoProfessor = "Rafaela", .enderecoDoProfessor = "Luiz Pizza, 2623", .telefoneDoProfessor = "18 99696 - 6969"}
+            {.codigoDoProfessor = 10, .nomeDoProfessor = "Wilson", .enderecoDoProfessor = "Rui Barbosa, 233", .telefoneDoProfessor = "18 99977 - 9999", .status = 0},
+            {.codigoDoProfessor = 30, .nomeDoProfessor = "Luciana", .enderecoDoProfessor = "Vicente de Carvalho, 700", .telefoneDoProfessor = "18 99666 - 6666", .status = 0},
+            {.codigoDoProfessor = 20, .nomeDoProfessor = "Hugo", .enderecoDoProfessor = "André Perine, 33", .telefoneDoProfessor = "18 98181 - 8181", .status = 0},
+            {.codigoDoProfessor = 40, .nomeDoProfessor = "Rafaela", .enderecoDoProfessor = "Luiz Pizza, 2623", .telefoneDoProfessor = "18 99696 - 6969", .status = 0}
     };
 
     IndiceProfessor indiceProfessor[8] = {
@@ -597,10 +669,10 @@ int main() {
     };
 
     Modalidades modalidades[8] = {
-            {.codigoDaModalidade = 100, .descricaoDaModalidade = "Sppining", .modalidadeCodigoDoProfessor = 40, .valorDaAula = 79.90, .limiteDeAlunos = 15, .totalDeAlunos = 14},
-            {.codigoDaModalidade = 300, .descricaoDaModalidade = "Musculação", .modalidadeCodigoDoProfessor = 10, .valorDaAula = 60.00, .limiteDeAlunos = 50, .totalDeAlunos = 49},
-            {.codigoDaModalidade = 200, .descricaoDaModalidade = "Muay Thai", .modalidadeCodigoDoProfessor = 20, .valorDaAula = 99.90, .limiteDeAlunos = 10, .totalDeAlunos = 8},
-            {.codigoDaModalidade = 400, .descricaoDaModalidade = "Pilates", .modalidadeCodigoDoProfessor = 30, .valorDaAula = 110.00, .limiteDeAlunos = 8, .totalDeAlunos = 6}
+            {.codigoDaModalidade = 100, .descricaoDaModalidade = "Sppining", .modalidadeCodigoDoProfessor = 40, .valorDaAula = 79.90, .limiteDeAlunos = 15, .totalDeAlunos = 14, .status = 0},
+            {.codigoDaModalidade = 300, .descricaoDaModalidade = "Musculação", .modalidadeCodigoDoProfessor = 10, .valorDaAula = 60.00, .limiteDeAlunos = 50, .totalDeAlunos = 49, .status = 0},
+            {.codigoDaModalidade = 200, .descricaoDaModalidade = "Muay Thai", .modalidadeCodigoDoProfessor = 20, .valorDaAula = 99.90, .limiteDeAlunos = 10, .totalDeAlunos = 8, .status = 0},
+            {.codigoDaModalidade = 400, .descricaoDaModalidade = "Pilates", .modalidadeCodigoDoProfessor = 30, .valorDaAula = 110.00, .limiteDeAlunos = 8, .totalDeAlunos = 6, .status = 0}
     };
 
     IndiceModalidade indiceModalidade[8] = {
@@ -611,10 +683,10 @@ int main() {
     };
 
     Matricula matricula[8] = {
-            {.codigoDaMatricula = 2, .cpfDoAluno = 044444, .matriculaCodigoDaModalidade = 400, .quantidadeDeAulas = 10},
-            {.codigoDaMatricula = 3, .cpfDoAluno = 055555, .matriculaCodigoDaModalidade = 200, .quantidadeDeAulas = 8},
-            {.codigoDaMatricula = 4, .cpfDoAluno = 066666, .matriculaCodigoDaModalidade = 100, .quantidadeDeAulas = 6},
-            {.codigoDaMatricula = 1, .cpfDoAluno = 077777, .matriculaCodigoDaModalidade = 300, .quantidadeDeAulas = 4}
+            {.codigoDaMatricula = 2, .cpfDoAluno = 4444, .matriculaCodigoDaModalidade = 400, .quantidadeDeAulas = 10, .status = 0},
+            {.codigoDaMatricula = 3, .cpfDoAluno = 8888, .matriculaCodigoDaModalidade = 200, .quantidadeDeAulas = 8, .status = 0},
+            {.codigoDaMatricula = 4, .cpfDoAluno = 6666, .matriculaCodigoDaModalidade = 100, .quantidadeDeAulas = 6, .status = 0},
+            {.codigoDaMatricula = 1, .cpfDoAluno = 2222, .matriculaCodigoDaModalidade = 300, .quantidadeDeAulas = 4, .status = 0}
     };
 
     IndiceMatricula indiceMatricula[8] = {
@@ -628,42 +700,150 @@ int main() {
     int contadorModalidade = 4;
     int contadorMatricula = 4;
 
-    inserirNovoAluno(aluno, indiceAluno, contadorAluno);
-    inserirNovoProfessor(professores, indiceProfessor, contadorProfessor);
-    inserirNovaModalidade(modalidades, indiceModalidade, contadorModalidade, professores, indiceProfessor,
-                          contadorProfessor);
-    inserirNovaMatricula(matricula, indiceMatricula, contadorMatricula, aluno, indiceAluno, contadorAluno, modalidades, indiceModalidade, contadorModalidade);
+    int escolha;
 
-    for (int i = 0; i < 8; i++) {
-        cout << "\nAluno " << i + 1 << " -------- " << "\nNome: " << aluno[i].nomeDoAluno << endl;
+    while(escolha != 99) {
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+        GetConsoleScreenBufferInfo(hConsole, &consoleInfo);
+        SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+        cout << "----------------------------------"<<endl;
+        cout <<"******* Academia PowerOn *********"<<endl;
+        cout <<"\n";
+        cout <<"****ALUNOS****"<<endl;
+        SetConsoleTextAttribute(hConsole, consoleInfo.wAttributes);
+        cout <<"1 - Cadastrar novo aluno(a)"<<endl;
+        cout <<"2 - Excluir aluno(a)"<<endl;
+        cout <<"3 - Ver todos os alunos"<<endl;
+        cout <<"\n";
+        SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+        cout <<"****PROFESSORES****"<<endl;
+        SetConsoleTextAttribute(hConsole, consoleInfo.wAttributes);
+        cout <<"4 - Cadastrar novo professor(a)"<<endl;
+        cout <<"5 - Excluir professor(a)"<<endl;
+        cout <<"6 - Ver todos os professores"<<endl;
+        cout <<"\n";
+        SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+        cout <<"****MODALIDADES****"<<endl;
+        SetConsoleTextAttribute(hConsole, consoleInfo.wAttributes);
+        cout <<"7 - Cadastrar nova modalidade"<<endl;
+        cout <<"8 - Excluir modalidade"<<endl;
+        cout <<"9 - Ver todas modalidades"<<endl;
+        cout <<"\n";
+        SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+        cout <<"****MATRICULAS****"<<endl;
+        SetConsoleTextAttribute(hConsole, consoleInfo.wAttributes);
+        cout <<"10 - Cadastrar nova matricula"<<endl;
+        cout <<"11 - Excluir matricula"<<endl;
+        cout <<"12 - Ver todas matriculas"<<endl;
+        cout <<"\n";
+        SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+        cout <<"****FUNÇÕES ADICIONAIS****"<<endl;
+        SetConsoleTextAttribute(hConsole, consoleInfo.wAttributes);
+        cout <<"13 - Calcular lucro de modalidade"<<endl;
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
+        cout <<"99 - Encerrar o programa"<<endl;
+        SetConsoleTextAttribute(hConsole, consoleInfo.wAttributes);
+        cout <<"\nEscolha uma opção: ";
+        cin >> escolha;
+        system("cls");
+
+        switch (escolha) {
+            case 1:
+                cout << "Cadastre até 4 alunos"<<endl;
+                inserirNovoAluno(aluno, indiceAluno, contadorAluno);
+                getch();
+                system("cls");
+                break;
+            case 2:
+                int cpfDoAluno;
+                cout << "Digite o CPF do aluno que deseja excluir: "<<endl;
+                cin >> cpfDoAluno;
+                deletarAluno(indiceAluno, aluno, contadorAluno, cpfDoAluno);
+                getch();
+                system("cls");
+                break;
+            case 3:
+                cout <<"\a\t\tLista de alunos"<<endl;
+                leituraExaustivaAluno(indiceAluno, aluno, contadorAluno);
+                getch();
+                system("cls");
+                break;
+            case 4:
+                cout << "Cadastre até 4 professores"<<endl;
+                inserirNovoProfessor(professores, indiceProfessor, contadorProfessor);
+                getch();
+                system("cls");
+                break;
+            case 5:
+                int codigoDoProfessor;
+                cout <<"Digite o código do professor que deseja excluir: "<<endl;
+                cin >> codigoDoProfessor;
+                deletarProfessor(indiceProfessor, professores, contadorProfessor, codigoDoProfessor);
+                getch();
+                system("cls");
+                break;
+            case 6:
+                cout <<"\a\t\tLista de professores"<<endl;
+                leituraExaustivaProfessor(indiceProfessor, professores, contadorProfessor);
+                getch();
+                system("cls");
+                break;
+            case 7:
+                cout << "Cadastre até 4 modalidades: "<<endl;
+                inserirNovaModalidade(modalidades, indiceModalidade, contadorModalidade, professores, indiceProfessor, contadorProfessor);
+                getch();
+                system("cls");
+                break;
+            case 8:
+                int codigoDaModalidade;
+                cout << "Digite o código da modalidade que deseja excluir: "<<endl;
+                cin >> codigoDaModalidade;
+                deletarModalidade(indiceModalidade, modalidades, contadorModalidade, codigoDaModalidade);
+                getch();
+                system("cls");
+                break;
+            case 9:
+                cout <<"\a\tLista de modalidades"<<endl;
+                leituraExaustivaModalidade(indiceModalidade, modalidades, contadorModalidade, indiceProfessor, professores, contadorProfessor);
+                getch();
+                system("cls");
+                break;
+            case 10:
+                cout <<"Cadastre até 4 matriculas"<<endl;
+                inserirNovaMatricula(matricula, indiceMatricula, contadorMatricula, aluno, indiceAluno, contadorAluno, modalidades, indiceModalidade, contadorModalidade);
+                getch();
+                system("cls");
+                break;
+            case 11:
+                int codigoDaMatricula;
+                cout << "Digite o código da matricula que deseja excluir: " <<endl;
+                cin >> codigoDaMatricula;
+                deletarMatricula(indiceMatricula,matricula, contadorMatricula, codigoDaMatricula, indiceModalidade, modalidades, contadorModalidade);
+                getch();
+                system("cls");
+                break;
+            case 12:
+                cout <<"\a\tLista de Matriculas"<<endl;
+                leituraExaustivaMatricula(indiceMatricula, matricula, contadorMatricula, indiceModalidade, modalidades, contadorModalidade, indiceAluno, aluno, contadorAluno);
+                getch();
+                system("cls");
+                break;
+            case 13:
+                calcularLucro(indiceModalidade, modalidades, indiceMatricula, matricula, indiceProfessor, professores, contadorModalidade, contadorMatricula, contadorProfessor);
+                getch();
+                system("cls");
+                break;
+            case 99:
+                cout << "Programa finalizado";
+                escolha = 99;
+                break;
+            default:
+                cout << "Escolha inválida!";
+                getch();
+                system("cls");
+                break;
+        }
     }
-
-    for (int i = 0; i < 8; i++) {
-        cout << "\nCPF DO ALUNO NO INDICE: " << i + 1 << ": " << indiceAluno[i].cpfIndice << ", "
-             << indiceAluno[i].enderecoDoAluno
-             << endl;
-    }
-
-    for (int i = 0; i < 8; i++) {
-        cout << "\nProfessor " << i + 1 << " -------- " << "\nNome: " << professores[i].nomeDoProfessor << endl;
-    }
-
-    for (int i = 0; i < 8; i++) {
-        cout << "\nCODIGO DO PROFESSOR NO INDICE: " << i + 1 << ": " << indiceProfessor[i].codigoProfessor << ", "
-             << indiceProfessor[i].enderecoProfessor
-             << endl;
-    }
-
-    for (int i = 0; i < 8; i++) {
-        cout << "\nModalidade " << i + 1 << " -------- " << "\nNome: " << modalidades[i].descricaoDaModalidade << endl;
-    }
-
-    for (int i = 0; i < 8; i++) {
-        cout << "\nCODIGO DA MODALIDADE NO INDICE: " << i + 1 << ": " << indiceModalidade[i].codigoModalidade << ", "
-             << indiceModalidade[i].enderecoModalidade
-             << endl;
-    }
-
-    getch();
     return 0;
 }
